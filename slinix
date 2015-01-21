@@ -4,40 +4,61 @@
 Uso: slinix press.slx
 ]]
 
-function slinix(line)	
+function span_elements(line)	
 
 	-- Backslash Escapes
-	line = line:gsub("(\\%*)", "&code;");
+	line = line:gsub("(\\%*)", "&code")
 	-- todo
 
 	-- html entities	
 	-- toto
 
 	-- double asterisks
-	line = line:gsub("%*%*(%a+[^%*%*]*)%*%*", "<strong>%1</strong>");	
+	line = line:gsub("%*%*(%a+[^%*%*]*)%*%*", "<strong>%1</strong>")	
 	-- double underscores
-	line = line:gsub("__(%a+[^__]*)__", "<strong>%1</strong>");	
+	line = line:gsub("__(%a+[^__]*)__", "<strong>%1</strong>")	
 	-- single asterisks
-	line = line:gsub("%*(%a+[^%*]*)%*", "<em>%1</em>");	
+	line = line:gsub("%*(%a+[^%*]*)%*", "<em>%1</em>")	
 	-- single underscores
-	line = line:gsub("_(%a+[^_]*)_", "<em>%1</em>");	
+	line = line:gsub("_(%a+[^_]*)_", "<em>%1</em>")	
 
 	-- code
-	line = line:gsub("`([^`]*)`", "<code>%1</code>");	
+	line = line:gsub("`([^`]*)`", "<code>%1</code>")	
 	
 	-- links
-	line = line:gsub("%[([^%]]*)%]", "<a href=\"%1\">");
+	line = line:gsub("%[([^%]]*)%]", "<a href=\"%1\">")
 
 	-- image
-	line = line:gsub("!%(([^%)]*)%)", "<img src=\"%1\">");	
+	line = line:gsub("!%(([^%)]*)%)", "<img src=\"%1\">")	
 
 	return line
 end
 
-print(slinix("*single asterisks*"))
-print(slinix("_single underscores_"))
-print(slinix("**double asterisks**"))
-print(slinix("__double underscores__"))
-print(slinix("Use the `printf()` function."))
-print(slinix("!(/path/to/img.jpg)"))
-print(slinix("[http://example.com/]"))
+function block_elements(line)
+	line = line:gsub("^######(.*)", "<h6>%1</h6>")
+	line = line:gsub("^#####(.*)", "<h5>%1</h5>")
+	line = line:gsub("^####(.*)", "<h4>%1</h4>")
+	line = line:gsub("^###(.*)", "<h3>%1</h3>")
+	line = line:gsub("^##(.*)", "<h2>%1</h2>")
+	line = line:gsub("^#(.*)", "<h1>%1</h1>")
+	return line
+end
+
+
+
+print(span_elements("*single asterisks*"))
+print(span_elements("_single underscores_"))
+print(span_elements("**double asterisks**"))
+print(span_elements("__double underscores__"))
+print(span_elements("Use the `printf()` function."))
+print(span_elements("!(/path/to/img.jpg)"))
+print(span_elements("[http://example.com/]"))
+
+print(block_elements("# This is an H1"))
+print(block_elements("## This is an H2"))
+print(block_elements("### This is an H3"))
+print(block_elements("#### This is an H4"))
+print(block_elements("##### This is an H5"))
+print(block_elements("###### This is an H6"))	
+
+print(block_elements("A ###### This is not an H6"))	
