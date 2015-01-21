@@ -1,0 +1,43 @@
+#!/bin/env lua
+
+--[[
+Uso: slinix press.slx
+]]
+
+function slinix(line)	
+
+	-- Backslash Escapes
+	line = line:gsub("(\\%*)", "&code;");
+	-- todo
+
+	-- html entities	
+	-- toto
+
+	-- double asterisks
+	line = line:gsub("%*%*(%a+[^%*%*]*)%*%*", "<strong>%1</strong>");	
+	-- double underscores
+	line = line:gsub("__(%a+[^__]*)__", "<strong>%1</strong>");	
+	-- single asterisks
+	line = line:gsub("%*(%a+[^%*]*)%*", "<em>%1</em>");	
+	-- single underscores
+	line = line:gsub("_(%a+[^_]*)_", "<em>%1</em>");	
+
+	-- code
+	line = line:gsub("`([^`]*)`", "<code>%1</code>");	
+	
+	-- links
+	line = line:gsub("%[([^%]]*)%]", "<a href=\"%1\">");
+
+	-- image
+	line = line:gsub("!%(([^%)]*)%)", "<img src=\"%1\">");	
+
+	return line
+end
+
+print(slinix("*single asterisks*"))
+print(slinix("_single underscores_"))
+print(slinix("**double asterisks**"))
+print(slinix("__double underscores__"))
+print(slinix("Use the `printf()` function."))
+print(slinix("!(/path/to/img.jpg)"))
+print(slinix("[http://example.com/]"))
