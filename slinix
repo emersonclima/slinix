@@ -44,8 +44,32 @@ function block_elements(line)
 	return line
 end
 
+function slinix(file)
+	local START_DOCUMENT = 0;
+	local PARAGRAPH = 1;
+	local current_state = START_DOCUMENT	
 
+	for line in io.lines(file) do
+		if current_state == START_DOCUMENT then
+			if line then				
+				current_state = PARAGRAPH
+				print "<p>"
+			end
+		elseif current_state == PARAGRAPH then
+			if line == "" then				
+				print "</p>"
+				current_state = START_DOCUMENT
+			end
+		end	
 
+		if line then print(span_elements(line)) end
+	end
+
+	if current_state == PARAGRAPH then
+		print "</p>"
+	end
+end
+--[[
 print(span_elements("*single asterisks*"))
 print(span_elements("_single underscores_"))
 print(span_elements("**double asterisks**"))
@@ -62,3 +86,6 @@ print(block_elements("##### This is an H5"))
 print(block_elements("###### This is an H6"))	
 
 print(block_elements("A ###### This is not an H6"))	
+]]
+
+slinix(arg[1])
