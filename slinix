@@ -45,47 +45,112 @@ function block_elements(line)
 end
 
 function slinix(file)
-	local START_DOCUMENT = 0;
-	local PARAGRAPH = 1;
-	local current_state = START_DOCUMENT	
+	local START_DOCUMENT = 0
+	local PARAGRAPH = 1
+	local UNORDERED_LIST = 2	
+	local ORDERED_LIST = 3
+	local current_state = START_DOCUMENT
 
-	for line in io.lines(file) do
+	for line in io.lines(file) do		
+		isBlank = line == ""		
+		isUnorderedListBullet = line:find("%* .+") 		
+		isOrderedListBullet = line:find("%d+%. .+") 		
+
 		if current_state == START_DOCUMENT then
-			if line then				
+			if isBlank then
+				current_state = START_DOCUMENT
+			elseif isUnorderedListBullet then
+				current_state = UNORDERED_LIST				
+				print "<p>"
+				print "<ul>"
+				print "<li>"
+				print (span_elements(line:sub(3)))
+				print "</li>"
+			elseif isOrderedListBullet then
+				current_state = ORDERED_LIST				
+				print "<p>"
+				print "<ol>"
+				print "<li>"
+				print (span_elements(line:sub(3)))
+				print "</li>"
+			else 
 				current_state = PARAGRAPH
 				print "<p>"
+				print (span_elements(line))
 			end
 		elseif current_state == PARAGRAPH then
-			if line == "" then				
-				print "</p>"
+			if isBlank then
 				current_state = START_DOCUMENT
+				print "</p>"
+			elseif isUnorderedListBullet then
+				current_state = UNORDERED_LIST
+				print "</p>"
+				print "<p>"
+				print "<ul>"
+				print "<li>"
+				print (span_elements(line:sub(3)))
+				print "</li>"
+			elseif isOrderedListBullet then
+				current_state = ORDERED_LIST
+				print "</p>"
+				print "<p>"
+				print "<ol>"
+				print "<li>"
+				print (span_elements(line:sub(3)))
+				print "</li>"
+			else
+				print (span_elements(line))
 			end
-		end	
-
-		if line then print(span_elements(line)) end
-	end
-
-	if current_state == PARAGRAPH then
-		print "</p>"
-	end
+		elseif current_state == UNORDERED_LIST then
+			if isBlank then
+				current_state = UNORDERED_LIST
+			elseif isUnorderedListBullet then
+				current_state = UNORDERED_LIST
+				print "<li>"
+				print (span_elements(line:sub(3)))
+				print "</li>"
+			elseif isOrderedListBullet then
+				current_state = ORDERED_LIST
+				print "</ul>"
+				print "</p>"
+				print "<p>"
+				print "<ol>"
+				print "<li>"				
+				print (span_elements(line:sub(3)))
+				print "</li>"
+			else
+				current_state = PARAGRAPH
+				print "</ul>"
+				print "</p>"
+				print "<p>"
+				print (span_elements(line))
+			end
+		elseif current_state == ORDERED_LIST then
+			if isBlank then
+				current_state = ORDERED_LIST
+			elseif isUnorderedListBullet then
+				current_state = UNORDERED_LIST
+				print "</ol>"
+				print "</p>"
+				print "<p>"
+				print "<ul>"
+				print "<li>"				
+				print (span_elements(line:sub(3)))
+				print "</li>"				
+			elseif isOrderedListBullet then
+				current_state = ORDERED_LIST
+				print "<li>"
+				print (span_elements(line:sub(3)))
+				print "</li>"
+			else
+				current_state = PARAGRAPH
+				print "</ol>"
+				print "</p>"
+				print "<p>"
+				print (span_elements(line))
+			end
+		end
+	end		
 end
---[[
-print(span_elements("*single asterisks*"))
-print(span_elements("_single underscores_"))
-print(span_elements("**double asterisks**"))
-print(span_elements("__double underscores__"))
-print(span_elements("Use the `printf()` function."))
-print(span_elements("!(/path/to/img.jpg)"))
-print(span_elements("[http://example.com/]"))
-
-print(block_elements("# This is an H1"))
-print(block_elements("## This is an H2"))
-print(block_elements("### This is an H3"))
-print(block_elements("#### This is an H4"))
-print(block_elements("##### This is an H5"))
-print(block_elements("###### This is an H6"))	
-
-print(block_elements("A ###### This is not an H6"))	
-]]
 
 slinix(arg[1])
