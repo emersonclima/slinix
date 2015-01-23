@@ -6,42 +6,100 @@ Uso: slinix press.slx
 
 function span_elements(line)	
 
-	-- Backslash Escapes
-	line = line:gsub("(\\%*)", "&code")
-	-- todo
+	-- html entities
+	line = line:gsub("<", "&lt;")
+	line = line:gsub(">", "&gt;")
+	line = line:gsub("=", "&equals;")
+	line = line:gsub("&", "&amp;")
 
-	-- html entities	
-	-- toto
+	-- single underscores
+	line = line:gsub("`(%a+[^`]*)`", "<code>%1</code>")
 
 	-- double asterisks
-	line = line:gsub("%*%*(%a+[^%*%*]*)%*%*", "<strong>%1</strong>")	
-	-- double underscores
-	line = line:gsub("__(%a+[^__]*)__", "<strong>%1</strong>")	
-	-- single asterisks
-	line = line:gsub("%*(%a+[^%*]*)%*", "<em>%1</em>")	
-	-- single underscores
-	line = line:gsub("_(%a+[^_]*)_", "<em>%1</em>")	
+	line = line:gsub("^%*%*(%a+[^%*%*]*)%*%*", "<strong>%1</strong>")
+	line = line:gsub("%s%*%*(%a+[^%*%*]*)%*%*", "&nbsp;<strong>%1</strong>")
 
-	-- code
-	line = line:gsub("`([^`]*)`", "<code>%1</code>")	
+	-- double underscores
+	line = line:gsub("^__(%a+[^__]*)__", "<strong>%1</strong>")	
+	line = line:gsub("%s__(%a+[^__]*)__", "&nbsp;<strong>%1</strong>")	
+
+	-- single asterisks
+	line = line:gsub("^%*(%a+[^%*]*)%*", "<em>%1</em>")	
+	line = line:gsub("%s%*(%a+[^%*]*)%*", "&nbsp;<em>%1</em>")
+
+	-- single underscores
+	line = line:gsub("^_(%a+[^_]*)_", "<em>%1</em>")
+	line = line:gsub("%s_(%a+[^_]*)_", "&nbsp;<em>%1</em>")
 	
 	-- links
-	line = line:gsub("%[([^%]]*)%]", "<a href=\"%1\">")
+	line = line:gsub("^%[(.-)%]", "<a href=\"%1\">%1</a>")
+	line = line:gsub("%s+%[(.-)%]", "&nbsp;<a href=\"%1\">%1</a>")
 
 	-- image
-	line = line:gsub("!%(([^%)]*)%)", "<img src=\"%1\">")	
+	line = line:gsub("^!%((.-)%s(%w+)%s(%w+)%)", "<img src=\"%1\" width=\"%2\" height=\"%3\">")	
+	line = line:gsub("%s!%((.-)%s(%w+)%s(%w+)%)", "<img src=\"%1\" width=\"%2\" height=\"%3\">")	
 
 	return line
 end
 
+function string.starts(String,Start)
+   return string.sub(String,1,string.len(Start))==Start
+end
+
+function string.ends(String,End)
+   return End=='' or string.sub(String,-string.len(End))==End
+end
+
+function string.trim(s)
+  return (s:gsub("^%s*(.-)%s*$", "%1"))
+end
+
 function block_elements(line)
-	line = line:gsub("^######(.*)", "<h6>%1</h6>")
-	line = line:gsub("^#####(.*)", "<h5>%1</h5>")
-	line = line:gsub("^####(.*)", "<h4>%1</h4>")
-	line = line:gsub("^###(.*)", "<h3>%1</h3>")
-	line = line:gsub("^##(.*)", "<h2>%1</h2>")
-	line = line:gsub("^#(.*)", "<h1>%1</h1>")
-	return line
+	local stack = {}
+	
+	if line:starts("-> ") then
+		if line:ends(" <-") then
+			stack[#stack + 1] = "</div>"
+			print "<div style=\"text-align: center\">"
+			line = line:sub(4, -4)
+		else
+			stack[#stack + 1] = "</div>"
+			print "<div style=\"text-align: right\">"
+			line = line:sub(4)
+		end
+	end
+
+	if line:starts("# ") then
+		print "<h1>"
+		stack[#stack + 1] = "</h1>"
+		line = line:sub(3)
+	elseif line:starts("## ") then
+		print "<h2>"
+		stack[#stack + 1] = "</h2>"
+		line = line:sub(4)
+	elseif line:starts("### ") then
+		print "<h3>"
+		stack[#stack + 1] = "</h3>"
+		line = line:sub(5)
+	elseif line:starts("#### ") then
+		print "<h4>"
+		stack[#stack + 1] = "</h4>"
+		line = line:sub(5)
+	elseif line:starts("##### ") then
+		print "<h5>"
+		stack[#stack + 1] = "</h5>"
+		line = line:sub(7)
+	elseif line:starts("###### ") then
+		print "<h5>"
+		stack[#stack + 1] = "</h5>"
+		line = line:sub(8)
+	end		
+
+	print(span_elements(line))
+	while #stack > 0 do
+		print(stack[#stack])
+		stack[#stack] = nil
+	end
 end
 
 function slinix(file)
@@ -51,7 +109,8 @@ function slinix(file)
 	local ORDERED_LIST = 3
 	local current_state = START_DOCUMENT
 
-	for line in io.lines(file) do		
+	for line in io.lines(file) do	
+		line = line:trim()	
 		isBlank = line == ""		
 		isUnorderedListBullet = line:find("%* .+") 		
 		isOrderedListBullet = line:find("%d+%. .+") 		
@@ -76,7 +135,7 @@ function slinix(file)
 			else 
 				current_state = PARAGRAPH
 				print "<p>"
-				print (span_elements(line))
+				block_elements(line)
 			end
 		elseif current_state == PARAGRAPH then
 			if isBlank then
@@ -96,10 +155,10 @@ function slinix(file)
 				print "<p>"
 				print "<ol>"
 				print "<li>"
-				print (span_elements(line:sub(3)))
+				print (span_elements(line:sub(4)))
 				print "</li>"
 			else
-				print (span_elements(line))
+				block_elements(line)
 			end
 		elseif current_state == UNORDERED_LIST then
 			if isBlank then
@@ -116,14 +175,14 @@ function slinix(file)
 				print "<p>"
 				print "<ol>"
 				print "<li>"				
-				print (span_elements(line:sub(3)))
+				print (span_elements(line:sub(4)))
 				print "</li>"
 			else
 				current_state = PARAGRAPH
 				print "</ul>"
 				print "</p>"
 				print "<p>"
-				print (span_elements(line))
+				block_elements(line)
 			end
 		elseif current_state == ORDERED_LIST then
 			if isBlank then
@@ -140,14 +199,14 @@ function slinix(file)
 			elseif isOrderedListBullet then
 				current_state = ORDERED_LIST
 				print "<li>"
-				print (span_elements(line:sub(3)))
+				print (span_elements(line:sub(4)))
 				print "</li>"
 			else
 				current_state = PARAGRAPH
 				print "</ol>"
 				print "</p>"
 				print "<p>"
-				print (span_elements(line))
+				block_elements(line)
 			end
 		end
 	end		
