@@ -7,10 +7,10 @@ Uso: slinix press.slx
 function span_elements(line)	
 
 	-- html entities
-	line = line:gsub("<", "&lt;")
-	line = line:gsub(">", "&gt;")
-	line = line:gsub("=", "&equals;")
-	line = line:gsub("&", "&amp;")
+	--line = line:gsub("<", "&lt;")
+	--line = line:gsub(">", "&gt;")
+	--line = line:gsub("=", "&equals;")
+	--line = line:gsub("&", "&amp;")
 
 	-- single underscores
 	line = line:gsub("`(%a+[^`]*)`", "<pre><code>%1</code></pre>")
@@ -320,6 +320,7 @@ if ("ontouchstart" in document.documentElement) {
 <script>impress().init();</script>
 <script src="https://highlightjs.org/static/highlight.pack.js"></script>
 <script>hljs.initHighlightingOnLoad();</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 </body>
 </html>
 ]]
