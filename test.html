@@ -9,6 +9,7 @@
 	<meta name="author" content="Bartek Szopka" />
 	<link href="http://fonts.googleapis.com/css?family=Open+Sans:regular,semibold,italic,italicsemibold|PT+Sans:400,700,400italic,700italic|PT+Serif:400,700,400italic,700italic" rel="stylesheet" />
 	<link href="http://bartaz.github.io/impress.js/css/impress-demo.css" rel="stylesheet" />
+	<link href="https://highlightjs.org/static/demo/styles/default.css" rel="stylesheet" >
 </head>
 <body class="impress-not-supported">
 
@@ -119,7 +120,7 @@ Aligment (code)
 </h2>
 </p>
 <p>
-<code>Left</code>
+<pre><code>Left</code></pre>
 </p>
 <p>
 `-&amp;gt; Center &amp;lt;-`
@@ -203,6 +204,33 @@ Links (code)
 </p>
 <p>
 `[http://www.google.com]`
+</p>
+</div>
+<div class="step slide" data-x="11000" data-y="0">
+<p>
+<h2>
+Code
+</h2>
+</p>
+<p>
+the method main signature:
+</p>
+<p>
+<pre><code>int main(int argc, char* argv[]);</code></pre>
+</p>
+<p>
+An example of main:
+</p>
+<p>
+<pre>
+<code>
+int main(int argc, char* argv[]) {
+printf("Hello World %s!", "Jose");
+return 0;
+}
+</code>
+</pre>
+</p>
 </div>
 
 <div class="hint">
@@ -216,6 +244,8 @@ if ("ontouchstart" in document.documentElement) {
 
 <script src="http://bartaz.github.io/impress.js/js/impress.js"></script>
 <script>impress().init();</script>
+<script src="https://highlightjs.org/static/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
 </body>
 </html>
 

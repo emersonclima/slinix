@@ -5,7 +5,7 @@
 
 			-> _Por emersonclima_
 
-..
+			...
 
 ## Headers
 
@@ -16,7 +16,7 @@
 ##### h5
 ###### h6
 
-.. 
+			...
 ## Headers (code)
 
 `# h1`
@@ -31,7 +31,7 @@
 
 `###### h6`
 
-.. 
+			... 
 
 ## Aligment
 
@@ -41,7 +41,7 @@ Left
 
 -> Rigth
 
-.. 
+			... 
 ## Aligment (code)
 
 `Left`
@@ -50,7 +50,7 @@ Left
 
 `-> Rigth`
 
-.. 
+			... 
 
 ## Span elements
 
@@ -60,7 +60,7 @@ _emphasis text_
 **strong text**
 __strong text__
 
-.. 
+			... 
 
 ## Span elements (code)
 
@@ -72,13 +72,13 @@ __strong text__
 
 `__strong text__`
 
-.. 
+			... 
 
 ## Images
 
 !(http://img2.wikia.nocookie.net/__cb20131013020149/starwars/images/8/83/HanSolo-Fathead.png auto 300px) !(http://img2.wikia.nocookie.net/__cb20070221012454/starwars/images/7/72/Chewie19BBY-CVD.jpg auto 300px)
 
-.. 
+			... 
 
 ## Images (code)
 
@@ -86,14 +86,31 @@ __strong text__
 
 `!(http://img2.wikia.nocookie.net/__cb20070221012454/starwars/images/7/72/Chewie19BBY-CVD.jpg auto 300px)`
 
-.. 
+			... 
 
 ## Links
 
 Visite o site do Google: [http://www.google.com], caso prefira acesse o Yahoo!: [http://www.yahoo.com]
 
-.. 
+			... 
 
 ## Links (code)
 
 `[http://www.google.com]`
+
+...
+
+## Code
+
+the method main signature:
+
+`int main(int argc, char* argv[]);`
+
+An example of main:
+
+```
+int main(int argc, char* argv[]) {
+	printf("Hello World %s!", "Jose");
+	return 0;
+}
+```

@@ -13,7 +13,7 @@ function span_elements(line)
 	line = line:gsub("&", "&amp;")
 
 	-- single underscores
-	line = line:gsub("`(%a+[^`]*)`", "<code>%1</code>")
+	line = line:gsub("`(%a+[^`]*)`", "<pre><code>%1</code></pre>")
 
 	-- double asterisks
 	line = line:gsub("^%*%*(%a+[^%*%*]*)%*%*", "<strong>%1</strong>")
@@ -107,15 +107,17 @@ function slinix(file)
 	local PARAGRAPH = 1
 	local UNORDERED_LIST = 2	
 	local ORDERED_LIST = 3
+	local CODE_BLOCK = 4
 	local current_state = START_DOCUMENT
 
-	for line in io.lines(file) do	
-		line = line:trim()	
+	for line in io.lines(file) do
+		line = line:trim()
 		isBlank = line == ""		
-		isUnorderedListBullet = line:find("%* .+") 		
-		isOrderedListBullet = line:find("%d+%. .+")		
-		isSlideTransition = line == ".."
-
+		isSlideTransition = line == "..."
+		isUnorderedListBullet = line:find("^%s*%* .+")
+		isOrderedListBullet = line:find("^%s*%d+%. .+")		
+		isCodeBlockDelimiter = line == "```"		
+				
 		if current_state == START_DOCUMENT then
 			if isBlank then
 				current_state = START_DOCUMENT
@@ -133,6 +135,11 @@ function slinix(file)
 				print "<li>"
 				print (span_elements(line:sub(3)))
 				print "</li>"
+			elseif isCodeBlockDelimiter then
+				current_state = CODE_BLOCK				
+				print "<p>"
+				print "<pre>"
+				print "<code>"
 			elseif isSlideTransition then
 				current_state = START_DOCUMENT				
 				print "</div>"
@@ -163,6 +170,12 @@ function slinix(file)
 				print "<li>"
 				print (span_elements(line:sub(4)))
 				print "</li>"
+			elseif isCodeBlockDelimiter then
+				current_state = CODE_BLOCK				
+				print "</p>"
+				print "<p>"
+				print "<pre>"
+				print "<code>"
 			elseif isSlideTransition then
 				current_state = START_DOCUMENT
 				print "</p>"
@@ -189,6 +202,13 @@ function slinix(file)
 				print "<li>"				
 				print (span_elements(line:sub(4)))
 				print "</li>"
+			elseif isCodeBlockDelimiter then
+				current_state = CODE_BLOCK				
+				print "</ul>"
+				print "</p>"
+				print "<p>"
+				print "<pre>"
+				print "<code>"
 			elseif isSlideTransition then
 				current_state = START_DOCUMENT
 				print "</ul>"
@@ -220,6 +240,13 @@ function slinix(file)
 				print "<li>"
 				print (span_elements(line:sub(4)))
 				print "</li>"
+			elseif isCodeBlockDelimiter then
+				current_state = CODE_BLOCK				
+				print "</ol>"
+				print "</p>"
+				print "<p>"
+				print "<pre>"
+				print "<code>"
 			elseif isSlideTransition then
 				current_state = START_DOCUMENT
 				print "</ol>"
@@ -233,6 +260,15 @@ function slinix(file)
 				print "</p>"
 				print "<p>"
 				block_elements(line)
+			end
+		elseif current_state == CODE_BLOCK then
+			if isCodeBlockDelimiter then
+				current_state = START_DOCUMENT
+				print "</code>"
+				print "</pre>"
+				print "</p>"
+			else
+				print(line)
 			end
 		end
 	end		
@@ -252,6 +288,7 @@ print [[<!doctype html>
 	<meta name="author" content="Bartek Szopka" />
 	<link href="http://fonts.googleapis.com/css?family=Open+Sans:regular,semibold,italic,italicsemibold|PT+Sans:400,700,400italic,700italic|PT+Serif:400,700,400italic,700italic" rel="stylesheet" />
 	<link href="http://bartaz.github.io/impress.js/css/impress-demo.css" rel="stylesheet" />
+	<link href="https://highlightjs.org/static/demo/styles/default.css" rel="stylesheet" >
 </head>
 <body class="impress-not-supported">
 
@@ -281,6 +318,8 @@ if ("ontouchstart" in document.documentElement) {
 
 <script src="http://bartaz.github.io/impress.js/js/impress.js"></script>
 <script>impress().init();</script>
+<script src="https://highlightjs.org/static/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
 </body>
 </html>
 ]]
