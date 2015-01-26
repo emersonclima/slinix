@@ -139,7 +139,7 @@ function slinix(file)
 				current_state = CODE_BLOCK				
 				print "<p>"
 				print "<pre>"
-				print "<code>"
+				io.write "<code>"
 			elseif isSlideTransition then
 				current_state = START_DOCUMENT				
 				print "</div>"
@@ -175,7 +175,7 @@ function slinix(file)
 				print "</p>"
 				print "<p>"
 				print "<pre>"
-				print "<code>"
+				io.write "<code>"
 			elseif isSlideTransition then
 				current_state = START_DOCUMENT
 				print "</p>"
@@ -208,7 +208,7 @@ function slinix(file)
 				print "</p>"
 				print "<p>"
 				print "<pre>"
-				print "<code>"
+				io.write "<code>"
 			elseif isSlideTransition then
 				current_state = START_DOCUMENT
 				print "</ul>"
@@ -246,7 +246,7 @@ function slinix(file)
 				print "</p>"
 				print "<p>"
 				print "<pre>"
-				print "<code>"
+				io.write "<code>"
 			elseif isSlideTransition then
 				current_state = START_DOCUMENT
 				print "</ol>"
