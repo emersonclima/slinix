@@ -1,0 +1,69 @@
+
+Detalhe X sobre isso
+
+Por fulano de Tal
+
+...
+
+-> ## Sumario
+
+0. **Introdução**
+1. _item 1_
+2. *item 2*
+3. __item 3__
+4. Con**clu**são
+
+...
+
+## Introdução
+
+bla bla bla blab lab lab lbalba blab bla
+bla bla bla blab lab lab lbalba blab bla
+bla bla bla blab lab lab lbalba blab bla
+bla bla bla blab lab lab lbalba blab bla
+
+bla bla bla blab lab lab lbalba blab bla
+bla bla bla blab lab lab lbalba blab bla
+bla bla bla blab lab lab lbalba blab bla
+bla bla bla blab lab lab lbalba blab bla
+
+...
+
+## Item 1
+
+bla blab lablalbala
+
+### Detalhe 1.1
+
+bla blab lablalbala [http://www.google.com.br]
+
+...
+
+## Item 2
+
+!(http://img2.wikia.nocookie.net/__cb20131013020149/starwars/images/8/83/HanSolo-Fathead.png 200px auto)
+
+...
+
+## Item 2 (Cont.)
+
+Definição: \( \pi \cdot a^2 + b^2 = c^2 \)
+
+Exemplo: bla bla blablalb la balba
+
+Video: ![url ]
+
+...
+
+o codigo `println("Hello World");` é usado para gerar a saida Hello World.
+
+~~~
+int void main(String[] args) {
+	if (args.length < 5) {
+		throws new RuntimeException();
+	}
+} 
+~~~
+
+
+
