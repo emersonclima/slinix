@@ -1,88 +1,129 @@
 #!/usr/bin/python3
 
-import sys, getopt
+import sys, os, getopt
 import markdown
 
-def on_start_document():
-	print("<html lang=\"en\">\n")
-	print("<head>\n")
-	print("    <meta charset=\"utf-8\" />\n")
-	print("    <meta name=\"viewport\" content=\"width=1024\" />\n")
-	print("    <meta name=\"apple-mobile-web-app-capable\" content=\"yes\" />\n")
-	print("    <title>impress.js | presentation tool based on the power of CSS3 transforms and transitions in modern browsers | by Bartek Szopka @bartaz</title>    \n")
-	print("    <meta name=\"description\" content=\"impress.js is a presentation tool based on the power of CSS3 transforms and transitions in modern browsers and inspired by the idea behind prezi.com.\" />\n")
-	print("    <meta name=\"author\" content=\"Bartek Szopka\" />\n")
-	print("    <link href=\"http://fonts.googleapis.com/css?family=Open+Sans:regular,semibold,italic,italicsemibold|PT+Sans:400,700,400italic,700italic|PT+Serif:400,700,400italic,700italic\" rel=\"stylesheet\" />\n")
-	print("    <link href=\"css/slinix.css\" rel=\"stylesheet\" />    \n")
-	print("    <link rel=\"shortcut icon\" href=\"favicon.png\" />\n")
-	print("    <link rel=\"apple-touch-icon\" href=\"apple-touch-icon.png\" />\n")
-	print("</head>\n")
-	print("<body class=\"slinix-not-supported\">\n")	
-	print("<div id=\"slinix\">\n")
+class Slinix:
 
-def on_end_document():
-	print("</div>\n")
-	print("<script src=\"js/slinix.js\"></script>\n")
-	print("<script>document.addEventListener(\"load\", function() { document.slinix = new Slinix(); document.slinix.start(); });</script>\n")
-	print("</body>\n")
-	print("</html>\n")
+	input = None
+	output = None
+	modules_path = "/usr/local/share/slinix"
+	embed = False
+	script_filenames = []
+	css_filenames = []	
 
-def on_slide(content):
-	print("<div class=\"slide\">")
-	print(markdown.markdown(content))
-	print("</div>")
+	def use_module(self, module_name):
+		css = os.path.join(self.modules_path, module_name + ".css")
+		js = os.path.join(self.modules_path, module_name + ".js")		
+		has_css = os.path.isfile(css)
+		has_js = os.path.isfile(js)
+		if (not has_css) and (not has_js):
+			sys.stderr.write("No stylesheet or code file found for module {}!\n".format(module_name))
+		if (has_css):
+			self.css_filenames.append(css)
+		if (has_js):
+			self.script_filenames.append(js)
 
-def parse_input(filename):
-	aux = ""	
-	with open(filename) as f:
-		for l in f:			
-			if (l == "---\n"):
-				on_slide(aux)
+	def on_start_document(self):
+		self.output.write("<html lang=\"en\">\n")
+		self.output.write("<head>\n")
+		self.output.write("    <meta charset=\"utf-8\" />\n")
+		self.output.write("    <meta name=\"viewport\" content=\"width=1024\" />\n")
+		self.output.write("    <meta name=\"apple-mobile-web-app-capable\" content=\"yes\" />\n")
+		self.output.write("    <title>impress.js | presentation tool based on the power of CSS3 transforms and transitions in modern browsers | by Bartek Szopka @bartaz</title>    \n")
+		self.output.write("    <meta name=\"description\" content=\"impress.js is a presentation tool based on the power of CSS3 transforms and transitions in modern browsers and inspired by the idea behind prezi.com.\" />\n")
+		self.output.write("    <meta name=\"author\" content=\"Bartek Szopka\" />\n")
+		self.output.write("    <link href=\"http://fonts.googleapis.com/css?family=Open+Sans:regular,semibold,italic,italicsemibold|PT+Sans:400,700,400italic,700italic|PT+Serif:400,700,400italic,700italic\" rel=\"stylesheet\" />\n")
+				
+		for stylesheet_filename in self.css_filenames:
+			if self.embed:
+				self.output.write("		<style> {} </style>".format(open(stylesheet_filename, "r").read()))
+			else:
+				self.output.write("    <link href=\"{}\" rel=\"stylesheet\" />\n".format(stylesheet_filename))
+
+		self.output.write("    <link rel=\"shortcut icon\" href=\"favicon.png\" />\n")
+		self.output.write("    <link rel=\"apple-touch-icon\" href=\"apple-touch-icon.png\" />\n")
+		self.output.write("</head>\n")
+		self.output.write("<body class=\"slinix-not-supported\">\n")	
+		self.output.write("<div id=\"slinix\">\n")
+
+	def on_end_document(self):
+		self.output.write("</div>\n")
+		
+		for script_filename in self.script_filenames:
+			if self.embed:
+				self.output.write("		<script>{}</script>".format(open(script_filename, "r").read()))
+			else:
+				self.output.write("    <script src=\"{}\"/>\n".format(script_filename))
+
+		self.output.write("<script>document.addEventListener(\"load\", function() { document.slinix = new Slinix(); document.slinix.start(); });</script>\n")
+		self.output.write("</body>\n")
+		self.output.write("</html>\n")
+
+	def on_slide(self, content):
+		self.output.write("<div class=\"slide\">")
+		self.output.write(markdown.markdown(content))
+		self.output.write("</div>")
+
+	def parse_input(self):
+		aux = ""		
+		for line in self.input:
+			if (line == "---\n"):
+				self.on_slide(aux)
 				aux = ""
 			else:
-				aux += l	
+				aux += line
+
+	def start(self):
+		self.on_start_document()
+		self.parse_input()
+		self.on_end_document()
 
 def usage():
-	print("{} -f input_filename -o output_filename [-h]")	
+	sys.stderr.write("{} -f input_filename -o output_filename [-h] [-e] [-m \"module1 ... moduleN\"]\n")
 
-def parse_opt():
+def version():
+	sys.stderr.write("{} version 0.1\n".format(sys.argv[0]))
+
+def parse_opt(slinix):	
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hef:c:s:o:")
+		opts, args = getopt.getopt(sys.argv[1:], "vhef:o:m:")
 	except getopt.GetoptError as err:
 		print(str(err))
 		usage()
 		sys.exit(2)
 
-	output_filename = None
-	input_filename = None
-	embed_figures = False
-	script_filename = "slinix.js"
-	css_filename = "slinix.css"
+	slinix.input = sys.stdin
+	slinix.output = sys.stdout
+	
+	slinix.use_module("slinix")
 
 	for opt, arg in opts:                   
 		if opt in ("-h", "--help"):
 			usage()
 			sys.exit()
 		elif opt == "-f":
-			input_filename = arg
+			slinix.input = open(arg, "r")
 		elif opt == "-o":
-			output_filename = arg
-		elif opt == "-c":
-			css_filename = arg
-		elif opt == "-s":
-			script_filename = arg
+			slinix.output = open(arg, "w")
+		elif opt == "-e":
+			slinix.embed = True
+		elif opt == "-m":
+			modules = arg.split()
+			for m in modules:
+				slinix.use_module(m)
+		elif opt == "-v":
+			version()
+			sys.exit(0)
 		else:
-			assert False, "unhandled option"
-	return { "ofname": output_filename, "ifname": input_filename, "cfname": css_filename, 
-		"sfname": script_filename, "embed": embed_figures }
+			assert False, "unhandled option"	
 
 def main():
-	sys.stderr.write("{} version 0.1\n".format(sys.argv[0]))
+	version()
+	slinix = Slinix()
+	parse_opt(slinix)
 
-	opts = parse_opt()
-	on_start_document()
-	parse_input(opts["ifname"])
-	on_end_document()
+	slinix.start();
 
 if __name__ == "__main__":
 	main()
