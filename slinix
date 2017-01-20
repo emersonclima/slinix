@@ -1,326 +1,88 @@
-#!/bin/env lua
+#!/usr/bin/python3
 
---[[
-Uso: slinix press.slx
-]]
+import sys, getopt
+import markdown
 
-function span_elements(line)	
+def on_start_document():
+	print("<html lang=\"en\">\n")
+	print("<head>\n")
+	print("    <meta charset=\"utf-8\" />\n")
+	print("    <meta name=\"viewport\" content=\"width=1024\" />\n")
+	print("    <meta name=\"apple-mobile-web-app-capable\" content=\"yes\" />\n")
+	print("    <title>impress.js | presentation tool based on the power of CSS3 transforms and transitions in modern browsers | by Bartek Szopka @bartaz</title>    \n")
+	print("    <meta name=\"description\" content=\"impress.js is a presentation tool based on the power of CSS3 transforms and transitions in modern browsers and inspired by the idea behind prezi.com.\" />\n")
+	print("    <meta name=\"author\" content=\"Bartek Szopka\" />\n")
+	print("    <link href=\"http://fonts.googleapis.com/css?family=Open+Sans:regular,semibold,italic,italicsemibold|PT+Sans:400,700,400italic,700italic|PT+Serif:400,700,400italic,700italic\" rel=\"stylesheet\" />\n")
+	print("    <link href=\"css/slinix.css\" rel=\"stylesheet\" />    \n")
+	print("    <link rel=\"shortcut icon\" href=\"favicon.png\" />\n")
+	print("    <link rel=\"apple-touch-icon\" href=\"apple-touch-icon.png\" />\n")
+	print("</head>\n")
+	print("<body class=\"slinix-not-supported\">\n")	
+	print("<div id=\"slinix\">\n")
 
-	-- html entities
-	--line = line:gsub("<", "&lt;")
-	--line = line:gsub(">", "&gt;")
-	--line = line:gsub("=", "&equals;")
-	--line = line:gsub("&", "&amp;")
+def on_end_document():
+	print("</div>\n")
+	print("<script src=\"js/slinix.js\"></script>\n")
+	print("<script>document.addEventListener(\"load\", function() { document.slinix = new Slinix(); document.slinix.start(); });</script>\n")
+	print("</body>\n")
+	print("</html>\n")
 
-	-- single underscores
-	line = line:gsub("`(%a+[^`]*)`", "<pre><code>%1</code></pre>")
+def on_slide(content):
+	print("<div class=\"slide\">")
+	print(markdown.markdown(content))
+	print("</div>")
 
-	-- double asterisks
-	line = line:gsub("^%*%*(%a+[^%*%*]*)%*%*", "<strong>%1</strong>")
-	line = line:gsub("%s%*%*(%a+[^%*%*]*)%*%*", "&nbsp;<strong>%1</strong>")
+def parse_input(filename):
+	aux = ""	
+	with open(filename) as f:
+		for l in f:			
+			if (l == "---\n"):
+				on_slide(aux)
+				aux = ""
+			else:
+				aux += l	
 
-	-- double underscores
-	line = line:gsub("^__(%a+[^__]*)__", "<strong>%1</strong>")	
-	line = line:gsub("%s__(%a+[^__]*)__", "&nbsp;<strong>%1</strong>")	
+def usage():
+	print("{} -f input_filename -o output_filename [-h]")	
 
-	-- single asterisks
-	line = line:gsub("^%*(%a+[^%*]*)%*", "<em>%1</em>")	
-	line = line:gsub("%s%*(%a+[^%*]*)%*", "&nbsp;<em>%1</em>")
+def parse_opt():
+	try:
+		opts, args = getopt.getopt(sys.argv[1:], "hef:c:s:o:")
+	except getopt.GetoptError as err:
+		print(str(err))
+		usage()
+		sys.exit(2)
 
-	-- single underscores
-	line = line:gsub("^_(%a+[^_]*)_", "<em>%1</em>")
-	line = line:gsub("%s_(%a+[^_]*)_", "&nbsp;<em>%1</em>")
-	
-	-- links
-	line = line:gsub("^%[(.-)%]", "<a href=\"%1\">%1</a>")
-	line = line:gsub("%s+%[(.-)%]", "&nbsp;<a href=\"%1\">%1</a>")
+	output_filename = None
+	input_filename = None
+	embed_figures = False
+	script_filename = "slinix.js"
+	css_filename = "slinix.css"
 
-	-- image
-	line = line:gsub("^!%((.-)%s(%w+)%s(%w+)%)", "<img src=\"%1\" width=\"%2\" height=\"%3\">")	
-	line = line:gsub("%s!%((.-)%s(%w+)%s(%w+)%)", "<img src=\"%1\" width=\"%2\" height=\"%3\">")	
+	for opt, arg in opts:                   
+		if opt in ("-h", "--help"):
+			usage()
+			sys.exit()
+		elif opt == "-f":
+			input_filename = arg
+		elif opt == "-o":
+			output_filename = arg
+		elif opt == "-c":
+			css_filename = arg
+		elif opt == "-s":
+			script_filename = arg
+		else:
+			assert False, "unhandled option"
+	return { "ofname": output_filename, "ifname": input_filename, "cfname": css_filename, 
+		"sfname": script_filename, "embed": embed_figures }
 
-	return line
-end
+def main():
+	sys.stderr.write("{} version 0.1\n".format(sys.argv[0]))
 
-function string.starts(String,Start)
-   return string.sub(String,1,string.len(Start))==Start
-end
+	opts = parse_opt()
+	on_start_document()
+	parse_input(opts["ifname"])
+	on_end_document()
 
-function string.ends(String,End)
-   return End=='' or string.sub(String,-string.len(End))==End
-end
-
-function string.trim(s)
-  return (s:gsub("^%s*(.-)%s*$", "%1"))
-end
-
-function block_elements(line)
-	local stack = {}
-	
-	if line:starts("-> ") then
-		if line:ends(" <-") then
-			stack[#stack + 1] = "</center>"
-			print "<center>"
-			line = line:sub(4, -4)
-		else
-			stack[#stack + 1] = "</div>"
-			print "<div style=\"text-align: right\">"
-			line = line:sub(4)
-		end
-	end
-
-	if line:starts("# ") then
-		print "<h1>"
-		stack[#stack + 1] = "</h1>"
-		line = line:sub(3)
-	elseif line:starts("## ") then
-		print "<h2>"
-		stack[#stack + 1] = "</h2>"
-		line = line:sub(4)
-	elseif line:starts("### ") then
-		print "<h3>"
-		stack[#stack + 1] = "</h3>"
-		line = line:sub(5)
-	elseif line:starts("#### ") then
-		print "<h4>"
-		stack[#stack + 1] = "</h4>"
-		line = line:sub(5)
-	elseif line:starts("##### ") then
-		print "<h5>"
-		stack[#stack + 1] = "</h5>"
-		line = line:sub(7)
-	elseif line:starts("###### ") then
-		print "<h5>"
-		stack[#stack + 1] = "</h5>"
-		line = line:sub(8)
-	end		
-
-	print(span_elements(line))
-	while #stack > 0 do
-		print(stack[#stack])
-		stack[#stack] = nil
-	end
-end
-
-function slinix(file)
-	local START_DOCUMENT = 0
-	local PARAGRAPH = 1
-	local UNORDERED_LIST = 2	
-	local ORDERED_LIST = 3
-	local CODE_BLOCK = 4
-	local current_state = START_DOCUMENT
-
-	for line in io.lines(file) do
-		line = line:trim()
-		isBlank = line == ""		
-		isSlideTransition = line == "..."
-		isUnorderedListBullet = line:find("^%s*%* .+")
-		isOrderedListBullet = line:find("^%s*%d+%. .+")		
-		isCodeBlockDelimiter = line == "```"		
-				
-		if current_state == START_DOCUMENT then
-			if isBlank then
-				current_state = START_DOCUMENT
-			elseif isUnorderedListBullet then
-				current_state = UNORDERED_LIST				
-				print "<p>"
-				print "<ul>"
-				print "<li>"
-				print (span_elements(line:sub(3)))
-				print "</li>"
-			elseif isOrderedListBullet then
-				current_state = ORDERED_LIST				
-				print "<p>"
-				print "<ol>"
-				print "<li>"
-				print (span_elements(line:sub(3)))
-				print "</li>"
-			elseif isCodeBlockDelimiter then
-				current_state = CODE_BLOCK				
-				print "<p>"
-				print "<pre>"
-				io.write "<code>"
-			elseif isSlideTransition then
-				current_state = START_DOCUMENT				
-				print "</div>"
-				dataX = dataX + 1000				
-				print("<div class=\"step slide\" data-x=\"" .. dataX .. "\" data-y=\"" .. dataY .. "\">")
-			else 
-				current_state = PARAGRAPH
-				print "<p>"
-				block_elements(line)
-			end
-		elseif current_state == PARAGRAPH then
-			if isBlank then
-				current_state = START_DOCUMENT
-				print "</p>"
-			elseif isUnorderedListBullet then
-				current_state = UNORDERED_LIST
-				print "</p>"
-				print "<p>"
-				print "<ul>"
-				print "<li>"
-				print (span_elements(line:sub(3)))
-				print "</li>"
-			elseif isOrderedListBullet then
-				current_state = ORDERED_LIST
-				print "</p>"
-				print "<p>"
-				print "<ol>"
-				print "<li>"
-				print (span_elements(line:sub(4)))
-				print "</li>"
-			elseif isCodeBlockDelimiter then
-				current_state = CODE_BLOCK				
-				print "</p>"
-				print "<p>"
-				print "<pre>"
-				io.write "<code>"
-			elseif isSlideTransition then
-				current_state = START_DOCUMENT
-				print "</p>"
-				print "</div>"
-				dataX = dataX + 1000				
-				print("<div class=\"step slide\" data-x=\"" .. dataX .. "\" data-y=\"" .. dataY .. "\">")
-			else
-				block_elements(line)
-			end
-		elseif current_state == UNORDERED_LIST then
-			if isBlank then
-				current_state = UNORDERED_LIST
-			elseif isUnorderedListBullet then
-				current_state = UNORDERED_LIST
-				print "<li>"
-				print (span_elements(line:sub(3)))
-				print "</li>"
-			elseif isOrderedListBullet then
-				current_state = ORDERED_LIST
-				print "</ul>"
-				print "</p>"
-				print "<p>"
-				print "<ol>"
-				print "<li>"				
-				print (span_elements(line:sub(4)))
-				print "</li>"
-			elseif isCodeBlockDelimiter then
-				current_state = CODE_BLOCK				
-				print "</ul>"
-				print "</p>"
-				print "<p>"
-				print "<pre>"
-				io.write "<code>"
-			elseif isSlideTransition then
-				current_state = START_DOCUMENT
-				print "</ul>"
-				print "</p>"
-				print "</div>"
-				dataX = dataX + 1000
-				print("<div class=\"step slide\" data-x=\"" .. dataX .. "\" data-y=\"" .. dataY .. "\">")
-			else				
-				current_state = PARAGRAPH
-				print "</ul>"
-				print "</p>"
-				print "<p>"
-				block_elements(line)
-			end
-		elseif current_state == ORDERED_LIST then
-			if isBlank then
-				current_state = ORDERED_LIST
-			elseif isUnorderedListBullet then
-				current_state = UNORDERED_LIST
-				print "</ol>"
-				print "</p>"
-				print "<p>"
-				print "<ul>"
-				print "<li>"				
-				print (span_elements(line:sub(3)))
-				print "</li>"				
-			elseif isOrderedListBullet then
-				current_state = ORDERED_LIST
-				print "<li>"
-				print (span_elements(line:sub(4)))
-				print "</li>"
-			elseif isCodeBlockDelimiter then
-				current_state = CODE_BLOCK				
-				print "</ol>"
-				print "</p>"
-				print "<p>"
-				print "<pre>"
-				io.write "<code>"
-			elseif isSlideTransition then
-				current_state = START_DOCUMENT
-				print "</ol>"
-				print "</p>"
-				print "</div>"
-				dataX = dataX + 1000				
-				print("<div class=\"step slide\" data-x=\"" .. dataX .. "\" data-y=\"" .. dataY .. "\">")				
-			else
-				current_state = PARAGRAPH
-				print "</ol>"
-				print "</p>"
-				print "<p>"
-				block_elements(line)
-			end
-		elseif current_state == CODE_BLOCK then
-			if isCodeBlockDelimiter then
-				current_state = START_DOCUMENT
-				print "</code>"
-				print "</pre>"
-				print "</p>"
-			else
-				print(line)
-			end
-		end
-	end		
-end
-
-dataX = 0
-dataY = 0
-
-print [[<!doctype html>
-<html lang="en">
-<head>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=1024" />
-	<meta name="apple-mobile-web-app-capable" content="yes" />
-	<title>Slinix</title>
-	<meta name="description" content="impress.js is a presentation tool based on the power of CSS3 transforms and transitions in modern browsers and inspired by the idea behind prezi.com." />
-	<meta name="author" content="Bartek Szopka" />
-	<link href="http://fonts.googleapis.com/css?family=Open+Sans:regular,semibold,italic,italicsemibold|PT+Sans:400,700,400italic,700italic|PT+Serif:400,700,400italic,700italic" rel="stylesheet" />
-	<link href="http://bartaz.github.io/impress.js/css/impress-demo.css" rel="stylesheet" />
-	<link href="https://highlightjs.org/static/demo/styles/default.css" rel="stylesheet" >
-</head>
-<body class="impress-not-supported">
-
-<!--
-    For example this fallback message is only visible when there is `impress-not-supported` class on body.
--->
-<div class="fallback-message">
-    <p>Your browser <b>doesn't support the features required</b> by impress.js, so you are presented with a simplified version of this presentation.</p>
-    <p>For the best experience please use the latest <b>Chrome</b>, <b>Safari</b> or <b>Firefox</b> browser.</p>
-</div>
-
-<div id="impress">
-	<div class="step slide" data-x="0" data-y="0">]]
-
-slinix(arg[1])
-
-print [[</div>
-
-<div class="hint">
-    <p>Use a spacebar or arrow keys to navigate</p>
-</div>
-<script>
-if ("ontouchstart" in document.documentElement) { 
-    document.querySelector(".hint").innerHTML = "<p>Tap on the left or right to navigate</p>";
-}
-</script>
-
-<script src="http://bartaz.github.io/impress.js/js/impress.js"></script>
-<script>impress().init();</script>
-<script src="https://highlightjs.org/static/highlight.pack.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-</body>
-</html>
-]]
+if __name__ == "__main__":
+	main()
